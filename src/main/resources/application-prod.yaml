@@ -1,0 +1,34 @@
+# Production Profile Configuration
+
+# Database Configuration for Production
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://prod-db-host:5432/emsdb}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Never auto-create in production
+    show-sql: false
+
+# CORS Configuration for Production
+cors:
+  allowed-origins: ${FRONTEND_URL:https://yourdomain.com},${AUTH_SERVICE_URL:https://auth-service.yourdomain.com},${EMS_SERVICE_URL:https://ems-service.yourdomain.com}
+
+# Logging for Production - Less verbose
+logging:
+  level:
+    com.pradeep.user: INFO
+    org.springframework.security: WARN
+    root: INFO
+
+server:
+  port: ${SERVER_PORT:8082}
+

@@ -1,0 +1,28 @@
+# Local Development Profile Configuration
+
+# Database Configuration for Local
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/emsdb
+    username: postgres
+    password: postgres
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+# CORS Configuration for Local
+cors:
+  allowed-origins: http://localhost:4200,http://localhost:8080,http://localhost:8081
+
+# Logging for Local - More verbose
+logging:
+  level:
+    com.pradeep.user: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG
+
+server:
+  port: 8082
+
