@@ -80,6 +80,8 @@ cors.allowed-origins=http://localhost:4200,http://localhost:8080,http://localhos
 - Lombok
 - SpringDoc OpenAPI (API documentation)
 - Spring Boot Validation
+- Spring Boot Cache (distributed caching)
+- Spring Data Redis (Redis integration)
 
 ## Running the Service
 
@@ -128,4 +130,107 @@ The service includes global exception handling for:
 - Duplicate user (409)
 - Validation errors (400)
 - Internal server errors (500)
+
+## Distributed Caching
+
+The service uses Redis for distributed caching to improve performance and reduce database load. All instances of the user-service share the same Redis cache.
+
+### Cache Configuration
+
+**Cache TTL (Time To Live):**
+- Default: 1 hour (3,600,000 milliseconds)
+- Configurable via `cache.redis.time-to-live` property
+- Cache entries automatically expire after TTL
+
+**Cached Operations:**
+- `getUserByEmail()` - Cached with key `"email:" + email`
+- `getUserByGoogleId()` - Cached with key `"googleId:" + googleId`
+
+**Cache Invalidation:**
+- User creation/updates automatically invalidate related cache entries
+- Role assignments/removals invalidate user cache entries
+- Ensures data consistency across all service instances
+
+### Redis Server Configuration
+
+**Important:** Redis memory limits must be configured at the Redis server level, not in the Spring application.
+
+#### Setting Redis Memory Limits
+
+Configure Redis server with memory limits and eviction policies:
+
+**Option 1: Redis Configuration File (`redis.conf`)**
+```conf
+# Set maximum memory (adjust based on available RAM)
+maxmemory 256mb
+
+# Eviction policy when memory limit is reached
+maxmemory-policy allkeys-lru
+```
+
+**Option 2: Redis CLI**
+```bash
+redis-cli CONFIG SET maxmemory 256mb
+redis-cli CONFIG SET maxmemory-policy allkeys-lru
+```
+
+**Option 3: Docker/Container**
+```yaml
+# docker-compose.yml
+redis:
+  image: redis:7-alpine
+  command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+```
+
+#### Eviction Policy Options
+
+- **`allkeys-lru`** (Recommended for caching) - Evicts least recently used keys when memory limit is reached
+- **`allkeys-lfu`** - Evicts least frequently used keys
+- **`volatile-lru`** - Evicts LRU keys that have TTL set only
+- **`volatile-lfu`** - Evicts LFU keys that have TTL set only
+- **`noeviction`** - Returns errors when memory limit is reached (not recommended for caching)
+
+#### Memory Limit Recommendations
+
+- **Development:** 128MB - 256MB
+- **Production:** 512MB - 2GB (depending on user count and available RAM)
+- Monitor Redis memory usage: `redis-cli INFO memory`
+
+#### Cache Behavior
+
+- **No Maximum Entry Count:** Unlike in-memory caches (Caffeine), Redis doesn't have a built-in maximum entry count in Spring Cache
+- **Memory-Based Eviction:** Redis evicts entries based on memory usage and eviction policy
+- **TTL-Based Expiration:** Entries also expire based on configured TTL (1 hour default)
+- **Shared Cache:** All service instances share the same Redis cache, providing consistency
+
+### Application Configuration
+
+Cache settings in `application.yaml`:
+
+```yaml
+cache:
+  redis:
+    time-to-live: 3600000  # 1 hour in milliseconds
+    cache-null-values: true  # Cache null values to avoid cache penetration
+```
+
+Redis connection settings:
+
+```yaml
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+```
+
+### Monitoring
+
+Monitor Redis cache performance:
+- Redis memory usage: `redis-cli INFO memory`
+- Cache hit/miss rates: Use Spring Actuator metrics (if enabled)
+- Redis keys: `redis-cli KEYS "users:*"` (use SCAN in production)
+
+
 

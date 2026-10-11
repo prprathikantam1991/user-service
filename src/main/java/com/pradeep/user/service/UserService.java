@@ -6,6 +6,8 @@ import com.pradeep.user.repository.RoleRepository;
 import com.pradeep.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,7 @@ public class UserService {
     /**
      * Create a new user and assign default USER role atomically
      */
+    @CacheEvict(value = "users", allEntries = true)
     @Transactional
     public User createUserWithDefaultRole(String email, String googleId, String name, String picture) {
         log.info("Creating new user with default role: {}", email);
@@ -62,6 +65,7 @@ public class UserService {
     /**
      * Update user information (name, picture)
      */
+    @CacheEvict(value = "users", key = "'email:' + #email")
     @Transactional
     public User updateUser(String email, String name, String picture) {
         return userRepository.findByEmail(email)
@@ -88,6 +92,7 @@ public class UserService {
      * Create or update user (used during OAuth2 callback)
      * If user exists, updates info; if not, creates with default role
      */
+    @CacheEvict(value = "users", allEntries = true)
     @Transactional
     public User createOrUpdateUser(String email, String googleId, String name, String picture) {
         // Try to find user by email first, then by Google ID
@@ -120,6 +125,7 @@ public class UserService {
     /**
      * Get user by email with roles
      */
+    @Cacheable(value = "users", key = "'email:' + #email")
     @Transactional(readOnly = true)
     public Optional<User> getUserByEmail(String email) {
         return userRepository.findByEmailWithRoles(email);
@@ -128,6 +134,7 @@ public class UserService {
     /**
      * Get user by Google ID with roles
      */
+    @Cacheable(value = "users", key = "'googleId:' + #googleId")
     @Transactional(readOnly = true)
     public Optional<User> getUserByGoogleId(String googleId) {
         return userRepository.findByGoogleIdWithRoles(googleId);
@@ -136,6 +143,7 @@ public class UserService {
     /**
      * Assign a role to a user by email
      */
+    @CacheEvict(value = "users", key = "'email:' + #email")
     @Transactional
     public User assignRoleToUser(String email, Role.RoleName roleName) {
         User user = userRepository.findByEmailWithRoles(email)
@@ -158,6 +166,7 @@ public class UserService {
     /**
      * Remove a role from a user by email
      */
+    @CacheEvict(value = "users", key = "'email:' + #email")
     @Transactional
     public User removeRoleFromUser(String email, Role.RoleName roleName) {
         User user = userRepository.findByEmailWithRoles(email)
@@ -219,4 +228,6 @@ public class UserService {
                 .orElse(Collections.emptyList());
     }
 }
+
+
 

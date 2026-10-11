@@ -20,3 +20,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByGoogleIdWithRoles(@Param("googleId") String googleId);
 }
 
+
+
+

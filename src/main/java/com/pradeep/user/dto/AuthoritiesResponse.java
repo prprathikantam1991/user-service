@@ -13,3 +13,6 @@ public class AuthoritiesResponse {
     private Collection<String> authorities;
 }
 
+
+
+

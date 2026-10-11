@@ -32,3 +32,15 @@ logging:
 server:
   port: ${SERVER_PORT:8082}
 
+# Redis Configuration for Production
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:redis-server}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      ssl:
+        enabled: ${REDIS_SSL_ENABLED:false}
+
+
+
