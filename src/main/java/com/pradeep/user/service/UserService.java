@@ -11,6 +11,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -27,6 +28,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final UserRegistrationService userRegistrationService;
 
     /**
      * Create a new user and assign default USER role atomically
@@ -45,21 +47,7 @@ public class UserService {
             throw new RuntimeException("User already exists: " + email);
         }
         
-        // Get default USER role
-        Role defaultRole = roleRepository.findByName(Role.RoleName.USER)
-                .orElseThrow(() -> new RuntimeException("Default USER role not found. Please initialize roles."));
-        
-        // Create user with default role
-        User newUser = User.builder()
-                .email(email)
-                .googleId(googleId)
-                .name(name)
-                .picture(picture)
-                .build();
-        
-        newUser.getRoles().add(defaultRole);
-        
-        return userRepository.save(newUser);
+        return userRegistrationService.register(email, googleId, name, picture);
     }
 
     /**
@@ -93,33 +81,46 @@ public class UserService {
      * If user exists, updates info; if not, creates with default role
      */
     @CacheEvict(value = "users", allEntries = true)
-    @Transactional
     public User createOrUpdateUser(String email, String googleId, String name, String picture) {
-        // Try to find user by email first, then by Google ID
-        Optional<User> existingUser = userRepository.findByEmail(email)
-                .or(() -> userRepository.findByGoogleId(googleId));
-
-        if (existingUser.isPresent()) {
-            // User exists - update info
-            User user = existingUser.get();
-            boolean updated = false;
-            if (name != null && !name.equals(user.getName())) {
-                user.setName(name);
-                updated = true;
-            }
-            if (picture != null && !picture.equals(user.getPicture())) {
-                user.setPicture(picture);
-                updated = true;
-            }
-            if (updated) {
-                log.info("Updating user info: {}", email);
-                return userRepository.save(user);
-            }
-            return user;
-        } else {
-            // User doesn't exist - create with default role
-            return createUserWithDefaultRole(email, googleId, name, picture);
+        Optional<User> userByGoogleId = userRepository.findByGoogleId(googleId);
+        if (userByGoogleId.isPresent()) {
+            return updateOauthProfile(userByGoogleId.get(), email, name, picture);
         }
+
+        Optional<User> userByEmail = userRepository.findByEmail(email);
+        if (userByEmail.isPresent()) {
+            throw new IllegalStateException("Email is already linked to another identity");
+        }
+
+        try {
+            return userRegistrationService.register(email, googleId, name, picture);
+        } catch (DataIntegrityViolationException race) {
+            return userRepository.findByGoogleId(googleId)
+                    .orElseThrow(() -> new IllegalStateException("Unable to resolve user after concurrent registration", race));
+        }
+    }
+
+    private User updateOauthProfile(User user, String email, String name, String picture) {
+        userRepository.findByEmail(email)
+                .filter(emailOwner -> !emailOwner.getId().equals(user.getId()))
+                .ifPresent(conflict -> {
+                    throw new IllegalStateException("Email is already linked to another identity");
+                });
+
+        boolean updated = false;
+        if (!email.equals(user.getEmail())) {
+            user.setEmail(email);
+            updated = true;
+        }
+        if (name != null && !name.equals(user.getName())) {
+            user.setName(name);
+            updated = true;
+        }
+        if (picture != null && !picture.equals(user.getPicture())) {
+            user.setPicture(picture);
+            updated = true;
+        }
+        return updated ? userRepository.save(user) : user;
     }
 
     /**
@@ -228,6 +229,4 @@ public class UserService {
                 .orElse(Collections.emptyList());
     }
 }
-
-
 
