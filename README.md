@@ -1,5 +1,9 @@
 # User Service
 
+## Internal API authentication
+
+User management endpoints under `/api/**` are internal service-to-service APIs. They require the `X-Internal-Api-Key` request header to match `USER_SERVICE_API_KEY`. Auth Service must be configured with the same environment value. The key is never committed to this repository; missing configuration fails closed for `/api/**` requests.
+
 Centralized User Management Service for handling user creation and role management.
 
 ## Overview
@@ -231,6 +235,5 @@ Monitor Redis cache performance:
 - Redis memory usage: `redis-cli INFO memory`
 - Cache hit/miss rates: Use Spring Actuator metrics (if enabled)
 - Redis keys: `redis-cli KEYS "users:*"` (use SCAN in production)
-
 
 

@@ -48,6 +48,11 @@ cache:
     # - maxmemory-policy (e.g., allkeys-lru)
     # See README.md for detailed Redis server configuration.
 
+# Authentication for trusted backend callers such as Auth Service.
+# No default is provided: a missing value fails closed for /api/** requests.
+security:
+  internal-api-key: ${USER_SERVICE_API_KEY:}
+
 # Actuator Configuration
 management:
   endpoints:
