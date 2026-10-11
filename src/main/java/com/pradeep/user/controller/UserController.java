@@ -30,7 +30,7 @@ public class UserController {
      */
     @PostMapping
     public ResponseEntity<UserDTO> createUser(@Valid @RequestBody CreateUserRequest request) {
-        log.info("Creating user: {}", request.getEmail());
+        log.info("Creating user");
         try {
             User user = userService.createUserWithDefaultRole(
                     request.getEmail(),
@@ -53,7 +53,7 @@ public class UserController {
      */
     @PostMapping("/create-or-update")
     public ResponseEntity<UserDTO> createOrUpdateUser(@Valid @RequestBody CreateUserRequest request) {
-        log.info("Creating or updating user: {}", request.getEmail());
+        log.info("Creating or updating user");
         User user = userService.createOrUpdateUser(
                 request.getEmail(),
                 request.getGoogleId(),
@@ -71,7 +71,7 @@ public class UserController {
     public ResponseEntity<UserDTO> updateUser(
             @PathVariable String email,
             @Valid @RequestBody UpdateUserRequest request) {
-        log.info("Updating user: {}", email);
+        log.info("Updating user");
         try {
             User user = userService.updateUser(email, request.getName(), request.getPicture());
             return ResponseEntity.ok(UserDTO.fromEntity(user));
@@ -89,7 +89,7 @@ public class UserController {
      */
     @GetMapping("/{email}")
     public ResponseEntity<UserDTO> getUserByEmail(@PathVariable String email) {
-        log.info("Getting user by email: {}", email);
+        log.info("Getting user by email");
         return userService.getUserByEmail(email)
                 .map(user -> ResponseEntity.ok(UserDTO.fromEntity(user)))
                 .orElse(ResponseEntity.notFound().build());
@@ -101,7 +101,7 @@ public class UserController {
      */
     @GetMapping("/google/{googleId}")
     public ResponseEntity<UserDTO> getUserByGoogleId(@PathVariable String googleId) {
-        log.info("Getting user by Google ID: {}", googleId);
+        log.info("Getting user by Google ID");
         return userService.getUserByGoogleId(googleId)
                 .map(user -> ResponseEntity.ok(UserDTO.fromEntity(user)))
                 .orElse(ResponseEntity.notFound().build());
@@ -115,7 +115,7 @@ public class UserController {
     public ResponseEntity<UserDTO> assignRoleToUser(
             @PathVariable String email,
             @Valid @RequestBody RoleAssignmentRequest request) {
-        log.info("Assigning role {} to user {}", request.getRoleName(), email);
+        log.info("Assigning role to user");
         try {
             User user = userService.assignRoleToUser(email, request.getRoleName());
             return ResponseEntity.ok(UserDTO.fromEntity(user));
@@ -135,7 +135,7 @@ public class UserController {
     public ResponseEntity<UserDTO> removeRoleFromUser(
             @PathVariable String email,
             @PathVariable Role.RoleName roleName) {
-        log.info("Removing role {} from user {}", roleName, email);
+        log.info("Removing role from user");
         try {
             User user = userService.removeRoleFromUser(email, roleName);
             return ResponseEntity.ok(UserDTO.fromEntity(user));
@@ -153,7 +153,7 @@ public class UserController {
      */
     @GetMapping("/{email}/roles")
     public ResponseEntity<Set<String>> getUserRoles(@PathVariable String email) {
-        log.info("Getting roles for user: {}", email);
+        log.info("Getting roles for user");
         try {
             Set<Role> roles = userService.getUserRoles(email);
             Set<String> roleNames = roles.stream()
@@ -174,7 +174,7 @@ public class UserController {
      */
     @GetMapping("/{email}/authorities")
     public ResponseEntity<AuthoritiesResponse> getUserAuthorities(@PathVariable String email) {
-        log.info("Getting authorities for user: {}", email);
+        log.info("Getting authorities for user");
         Collection<GrantedAuthority> authorities = userService.getUserAuthorities(email);
         Collection<String> authorityStrings = authorities.stream()
                 .map(GrantedAuthority::getAuthority)
@@ -188,7 +188,7 @@ public class UserController {
      */
     @GetMapping("/google/{googleId}/authorities")
     public ResponseEntity<AuthoritiesResponse> getUserAuthoritiesByGoogleId(@PathVariable String googleId) {
-        log.info("Getting authorities for user by Google ID: {}", googleId);
+        log.info("Getting authorities for user by Google ID");
         Collection<GrantedAuthority> authorities = userService.getUserAuthoritiesByGoogleId(googleId);
         Collection<String> authorityStrings = authorities.stream()
                 .map(GrantedAuthority::getAuthority)
@@ -196,4 +196,3 @@ public class UserController {
         return ResponseEntity.ok(new AuthoritiesResponse(authorityStrings));
     }
 }
-

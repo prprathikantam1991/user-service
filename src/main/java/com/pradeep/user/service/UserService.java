@@ -36,14 +36,14 @@ public class UserService {
     @CacheEvict(value = "users", allEntries = true)
     @Transactional
     public User createUserWithDefaultRole(String email, String googleId, String name, String picture) {
-        log.info("Creating new user with default role: {}", email);
+        log.info("Creating new user with default role");
         
         // Check if user already exists
         Optional<User> existingUser = userRepository.findByEmail(email)
                 .or(() -> userRepository.findByGoogleId(googleId));
         
         if (existingUser.isPresent()) {
-            log.warn("User already exists: {}", email);
+            log.warn("User already exists");
             throw new RuntimeException("User already exists: " + email);
         }
         
@@ -68,7 +68,7 @@ public class UserService {
                         updated = true;
                     }
                     if (updated) {
-                        log.info("Updating user info: {}", email);
+                        log.info("Updating user info");
                         return userRepository.save(user);
                     }
                     return user;
@@ -156,9 +156,9 @@ public class UserService {
         if (!user.getRoles().contains(role)) {
             user.getRoles().add(role);
             userRepository.save(user);
-            log.info("Assigned role {} to user {}", roleName, email);
+            log.info("Assigned role to user");
         } else {
-            log.debug("User {} already has role {}", email, roleName);
+            log.debug("User already has role");
         }
         
         return user;
@@ -179,9 +179,9 @@ public class UserService {
         if (user.getRoles().contains(role)) {
             user.getRoles().remove(role);
             userRepository.save(user);
-            log.info("Removed role {} from user {}", roleName, email);
+            log.info("Removed role from user");
         } else {
-            log.debug("User {} does not have role {}", email, roleName);
+            log.debug("User does not have role");
         }
         
         return user;
@@ -229,4 +229,3 @@ public class UserService {
                 .orElse(Collections.emptyList());
     }
 }
-
