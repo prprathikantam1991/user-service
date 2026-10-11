@@ -3,7 +3,7 @@
 # Database Configuration for Local
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/emsdb
+    url: jdbc:postgresql://localhost:5432/user_service_db
     username: postgres
     password: postgres
 
@@ -30,4 +30,3 @@ logging:
 
 server:
   port: 8082
-

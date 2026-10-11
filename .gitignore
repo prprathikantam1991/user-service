@@ -7,6 +7,9 @@
 # Maven
 target/
 
+# Local database migration backups may contain personal data.
+backups/
+
 # Compiled files
 *.class
 

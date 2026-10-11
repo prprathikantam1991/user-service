@@ -29,8 +29,9 @@ EMS Service → User Service (queries users, manages roles)
 
 ## Database
 
-- Shared PostgreSQL database (`emsdb`)
-- Same database used by Auth Service and EMS Service
+- Dedicated PostgreSQL database (`user_service_db`)
+- User Service owns only its identity and role tables: `users`, `roles`, and `user_roles`.
+- Other applications integrate through the User Service API; they do not read this database directly.
 
 ## API Endpoints
 
@@ -67,8 +68,8 @@ The service automatically initializes the following roles:
 server.port=8082
 spring.application.name=user-service
 
-# Database Configuration (shared with Auth and EMS services)
-spring.datasource.url=jdbc:postgresql://localhost:5432/emsdb
+# Database Configuration (owned by User Service)
+spring.datasource.url=jdbc:postgresql://localhost:5432/user_service_db
 spring.datasource.username=postgres
 spring.datasource.password=postgres
 
@@ -235,5 +236,4 @@ Monitor Redis cache performance:
 - Redis memory usage: `redis-cli INFO memory`
 - Cache hit/miss rates: Use Spring Actuator metrics (if enabled)
 - Redis keys: `redis-cli KEYS "users:*"` (use SCAN in production)
-
 

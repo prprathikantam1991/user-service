@@ -3,7 +3,7 @@
 # Database Configuration for Production
 spring:
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://prod-db-host:5432/emsdb}
+    url: ${DATABASE_URL:jdbc:postgresql://prod-db-host:5432/user_service_db}
     username: ${DATABASE_USERNAME:postgres}
     password: ${DATABASE_PASSWORD}
     hikari:
@@ -39,4 +39,3 @@ logging:
 
 server:
   port: ${SERVER_PORT:8082}
-
