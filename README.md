@@ -1,8 +1,12 @@
 # User Service
 
+User Service is the canonical internal identity directory for the application ecosystem. It assigns a stable internal UUID to each person, stores their application profile and roles, and exposes protected APIs only to trusted backend services.
+
 ## Internal API authentication
 
 User management endpoints under `/api/**` are internal service-to-service APIs. They require the `X-Internal-Api-Key` request header to match `USER_SERVICE_API_KEY`. Auth Service must be configured with the same environment value. The key is never committed to this repository; missing configuration fails closed for `/api/**` requests.
+
+This service does not authenticate browser users directly. Auth Service authenticates the person with Google, then calls User Service to find or create the durable internal user record. Finance Tracker uses that stable UUID as `owner_user_id` for finance records, but never reads this database directly.
 
 Centralized User Management Service for handling user creation and role management.
 
@@ -21,7 +25,10 @@ The User Service provides a single source of truth for user data and role manage
 ```
 Auth Service → User Service (creates user + assigns default role)
 EMS Service → User Service (queries users, manages roles)
+Finance Tracker → uses the stable User Service UUID through Auth Service's verified handoff
 ```
+
+For the detailed three-service contract, see [docs/FINANCE_TRACKER_IDENTITY_CONTRACT.md](docs/FINANCE_TRACKER_IDENTITY_CONTRACT.md).
 
 ## Port
 
@@ -117,6 +124,8 @@ POST /api/users/create-or-update
   "picture": "https://..."
 }
 ```
+
+The operation is idempotent and safe for a first-login retry. A caller must use the internal API key; it is not a public registration endpoint.
 
 ### EMS Service Integration
 
@@ -236,4 +245,3 @@ Monitor Redis cache performance:
 - Redis memory usage: `redis-cli INFO memory`
 - Cache hit/miss rates: Use Spring Actuator metrics (if enabled)
 - Redis keys: `redis-cli KEYS "users:*"` (use SCAN in production)
-
