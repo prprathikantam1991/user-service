@@ -1,8 +1,7 @@
 package com.pradeep.user.config;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pradeep.user.entity.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
@@ -49,10 +48,10 @@ public class CacheConfig {
     private long cacheTtl;
 
     /**
-     * Whether to cache null values to prevent cache penetration
+     * Whether to cache null values
      * Configurable via cache.redis.cache-null-values property
      */
-    @Value("${cache.redis.cache-null-values:true}")
+    @Value("${cache.redis.cache-null-values:false}")
     private boolean cacheNullValues;
 
     /**
@@ -66,15 +65,11 @@ public class CacheConfig {
      */
     @Bean
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-        // Configure JSON serializer for values
-        Jackson2JsonRedisSerializer<Object> jsonSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-        objectMapper.activateDefaultTyping(
-            objectMapper.getPolymorphicTypeValidator(),
-            ObjectMapper.DefaultTyping.NON_FINAL
-        );
-        jsonSerializer.setObjectMapper(objectMapper);
+        // This cache stores User records only. A typed serializer avoids accepting
+        // attacker-controlled polymorphic type metadata from Redis values.
+        ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+        Jackson2JsonRedisSerializer<User> jsonSerializer =
+                new Jackson2JsonRedisSerializer<>(objectMapper, User.class);
 
         // Configure String serializer for keys
         StringRedisSerializer stringSerializer = new StringRedisSerializer();
@@ -97,4 +92,3 @@ public class CacheConfig {
             .build();
     }
 }
-

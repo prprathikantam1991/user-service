@@ -40,8 +40,9 @@ cache:
   redis:
     # TTL (Time To Live) in milliseconds - entries expire after this duration
     time-to-live: 3600000  # 1 hour in milliseconds
-    # Cache null values to avoid cache penetration attacks
-    cache-null-values: true
+    # User lookups do not cache missing identities; this avoids persisting
+    # sentinel values and lets a newly provisioned user be visible immediately.
+    cache-null-values: false
     # Note: Maximum entry count is NOT configured here. Unlike in-memory caches (Caffeine),
     # Redis memory limits must be set at the Redis server level using:
     # - maxmemory (e.g., 256mb)

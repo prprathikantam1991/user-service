@@ -18,6 +18,14 @@ spring:
       ddl-auto: validate  # Never auto-create in production
     show-sql: false
 
+  data:
+    redis:
+      host: ${REDIS_HOST:redis-server}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      ssl:
+        enabled: ${REDIS_SSL_ENABLED:false}
+
 # CORS Configuration for Production
 cors:
   allowed-origins: ${FRONTEND_URL:https://yourdomain.com},${AUTH_SERVICE_URL:https://auth-service.yourdomain.com},${EMS_SERVICE_URL:https://ems-service.yourdomain.com}
@@ -31,16 +39,4 @@ logging:
 
 server:
   port: ${SERVER_PORT:8082}
-
-# Redis Configuration for Production
-spring:
-  data:
-    redis:
-      host: ${REDIS_HOST:redis-server}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
-      ssl:
-        enabled: ${REDIS_SSL_ENABLED:false}
-
-
 
